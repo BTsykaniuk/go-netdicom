@@ -2,7 +2,6 @@
 package main
 
 import (
-	"crypto/tls"
 	"flag"
 	"log"
 
@@ -14,10 +13,10 @@ import (
 )
 
 var (
-	serverFlag        = flag.String("server", "178.208.149.75:21113", "host:port of the remote application entity")
+	serverFlag        = flag.String("server", "127.0.0.1:4242", "host:port of the remote application entity")
 	storeFlag         = flag.String("store", "", "If set, issue C-STORE to copy this file to the remote server")
-	aeTitleFlag       = flag.String("ae-title", "testclient", "AE title of the client")
-	remoteAETitleFlag = flag.String("remote-ae-title", "SSLAIBUSSCP", "AE title of the server")
+	aeTitleFlag       = flag.String("ae-title", "OUR_STORE_SCP", "AE title of the client")
+	remoteAETitleFlag = flag.String("remote-ae-title", "ORTHANC", "AE title of the server")
 	findFlag          = flag.Bool("find", false, "Issue a C-FIND.")
 	getFlag           = flag.Bool("get", false, "Issue a C-GET.")
 	seriesFlag        = flag.String("series", "", "Study series UID to retrieve in C-{FIND,GET}.")
@@ -26,21 +25,23 @@ var (
 
 func newServiceUser(sopClasses []string) *netdicom.ServiceUser {
 	su, err := netdicom.NewServiceUser(netdicom.ServiceUserParams{
-		CalledAETitle:  *remoteAETitleFlag,
-		CallingAETitle: *aeTitleFlag,
-		SOPClasses:     sopClasses})
+		CalledAETitle:    *remoteAETitleFlag,
+		CallingAETitle:   *aeTitleFlag,
+		SOPClasses:       sopClasses,
+		TransferSyntaxes: []string{"1.2.840.10008.1.2.4.91", "1.2.840.10008.1.2"},
+	})
 	if err != nil {
 		log.Panic(err)
 	}
 
-	cert, err := tls.LoadX509KeyPair("client_keystore.crt", "client_keystore.key")
-	if err != nil {
-		log.Fatalf("server: loadkeys: %s", err)
-	}
-	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	//cert, err := tls.LoadX509KeyPair("client_keystore.crt", "client_keystore.key")
+	//if err != nil {
+	//	log.Fatalf("server: loadkeys: %s", err)
+	//}
+	//config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
 
 	log.Printf("Connecting to %s", *serverFlag)
-	su.Connect(*serverFlag, &config)
+	su.Connect(*serverFlag, nil)
 	return su
 }
 
@@ -72,7 +73,7 @@ func generateCFindElements() (netdicom.QRLevel, []*dicom.Element) {
 		dicom.MustNewElement(dicomtag.PatientID, "*"),
 		dicom.MustNewElement(dicomtag.PatientBirthDate, "*"),
 		dicom.MustNewElement(dicomtag.PatientSex, "*"),
-		dicom.MustNewElement(dicomtag.StudyID, "1.2.40.0.13.1.251004474544013922953057532187552421649"),
+		dicom.MustNewElement(dicomtag.StudyID, "1.2.276.0.7230010.3.1.2.1787205428.166.1117461927"),
 		dicom.MustNewElement(dicomtag.RequestedProcedureDescription, "*"),
 	}
 	return netdicom.QRLevelPatient, args

@@ -6,7 +6,6 @@ package netdicom
 
 import (
 	"crypto/tls"
-	"crypto/x509"
 	"fmt"
 	"net"
 	"sync"
@@ -164,19 +163,26 @@ func (su *ServiceUser) Connect(serverAddr string, config *tls.Config) {
 	if su.status != serviceUserInitial {
 		panic(fmt.Sprintf("dicom.serviceUser: Connect called with wrong state: %v", su.status))
 	}
-	conn, err := tls.Dial("tcp", serverAddr, config)
-	state := conn.ConnectionState()
-	for _, v := range state.PeerCertificates {
-		fmt.Println(x509.MarshalPKIXPublicKey(v.PublicKey))
-		fmt.Println(v.Subject)
+
+	if config != nil {
+		conn, err := tls.Dial("tcp", serverAddr, config)
+
+		if err != nil {
+			dicomlog.Vprintf(0, "dicom.serviceUser: Connect(%s): %v", serverAddr, err)
+			su.disp.downcallCh <- stateEvent{event: evt17, pdu: nil, err: err}
+		} else {
+			su.disp.downcallCh <- stateEvent{event: evt02, pdu: nil, err: nil, conn: conn}
+		}
+	} else {
+		conn, err := net.Dial("tcp", serverAddr)
+		if err != nil {
+			dicomlog.Vprintf(0, "dicom.serviceUser: Connect(%s): %v", serverAddr, err)
+			su.disp.downcallCh <- stateEvent{event: evt17, pdu: nil, err: err}
+		} else {
+			su.disp.downcallCh <- stateEvent{event: evt02, pdu: nil, err: nil, conn: conn}
+		}
 	}
 
-	if err != nil {
-		dicomlog.Vprintf(0, "dicom.serviceUser: Connect(%s): %v", serverAddr, err)
-		su.disp.downcallCh <- stateEvent{event: evt17, pdu: nil, err: err}
-	} else {
-		su.disp.downcallCh <- stateEvent{event: evt02, pdu: nil, err: nil, conn: conn}
-	}
 }
 
 // SetConn instructs ServiceUser to use the given network connection to talk to
@@ -323,6 +329,7 @@ func encodeQRPayload(opType qrOpType, qrLevel QRLevel, filter []*dicom.Element, 
 	}
 
 	// Encode the data payload containing the filtering conditions.
+	context.transferSyntaxUID = "1.2.840.10008.1.2.4.91"
 	dataEncoder := dicomio.NewBytesEncoderWithTransferSyntax(context.transferSyntaxUID)
 	foundQRLevel := false
 	for _, elem := range filter {
