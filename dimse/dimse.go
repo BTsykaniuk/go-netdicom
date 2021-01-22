@@ -13,10 +13,10 @@ import (
 	"github.com/BTsykaniuk/go-netdicom/pdu"
 	"sort"
 
-	dicom "github.com/apaladiychuk/go-dicom"
-	"github.com/apaladiychuk/go-dicom/dicomio"
-	"github.com/apaladiychuk/go-dicom/dicomlog"
-	"github.com/apaladiychuk/go-dicom/dicomtag"
+	dicom "github.com/BTsykaniuk/go-dicom"
+	"github.com/BTsykaniuk/go-dicom/dicomio"
+	"github.com/BTsykaniuk/go-dicom/dicomlog"
+	"github.com/BTsykaniuk/go-dicom/dicomtag"
 )
 
 // Message defines the common interface for all DIMSE message types.

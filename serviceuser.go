@@ -10,12 +10,12 @@ import (
 	"net"
 	"sync"
 
+	"github.com/BTsykaniuk/go-dicom"
+	"github.com/BTsykaniuk/go-dicom/dicomio"
+	"github.com/BTsykaniuk/go-dicom/dicomlog"
+	"github.com/BTsykaniuk/go-dicom/dicomtag"
+	"github.com/BTsykaniuk/go-dicom/dicomuid"
 	"github.com/BTsykaniuk/go-netdicom/dimse"
-	"github.com/apaladiychuk/go-dicom"
-	"github.com/apaladiychuk/go-dicom/dicomio"
-	"github.com/apaladiychuk/go-dicom/dicomlog"
-	"github.com/apaladiychuk/go-dicom/dicomtag"
-	"github.com/apaladiychuk/go-dicom/dicomuid"
 )
 
 type serviceUserStatus int

@@ -2,10 +2,10 @@ package dimse_test
 
 import (
 	"encoding/binary"
+	"github.com/BTsykaniuk/go-netdicom/dimse"
 	"testing"
 
-	"github.com/BTsykaniuk/go-netdicom"
-	"github.com/apaladiychuk/go-dicom/dicomio"
+	"github.com/BTsykaniuk/go-dicom/dicomio"
 )
 
 func testDIMSE(t *testing.T, v dimse.Message) {

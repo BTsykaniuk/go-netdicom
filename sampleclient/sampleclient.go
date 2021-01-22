@@ -5,18 +5,18 @@ import (
 	"flag"
 	"log"
 
+	"github.com/BTsykaniuk/go-dicom"
+	"github.com/BTsykaniuk/go-dicom/dicomtag"
 	"github.com/BTsykaniuk/go-netdicom"
 	"github.com/BTsykaniuk/go-netdicom/dimse"
 	"github.com/BTsykaniuk/go-netdicom/sopclass"
-	"github.com/apaladiychuk/go-dicom"
-	"github.com/apaladiychuk/go-dicom/dicomtag"
 )
 
 var (
-	serverFlag        = flag.String("server", "127.0.0.1:4242", "host:port of the remote application entity")
+	serverFlag        = flag.String("server", "176.99.133.226:9996", "host:port of the remote application entity")
 	storeFlag         = flag.String("store", "", "If set, issue C-STORE to copy this file to the remote server")
-	aeTitleFlag       = flag.String("ae-title", "OUR_STORE_SCP", "AE title of the client")
-	remoteAETitleFlag = flag.String("remote-ae-title", "ORTHANC", "AE title of the server")
+	aeTitleFlag       = flag.String("ae-title", "BINOMIX", "AE title of the client")
+	remoteAETitleFlag = flag.String("remote-ae-title", "AEZEBRA", "AE title of the server")
 	findFlag          = flag.Bool("find", false, "Issue a C-FIND.")
 	getFlag           = flag.Bool("get", false, "Issue a C-GET.")
 	seriesFlag        = flag.String("series", "", "Study series UID to retrieve in C-{FIND,GET}.")
@@ -28,7 +28,7 @@ func newServiceUser(sopClasses []string) *netdicom.ServiceUser {
 		CalledAETitle:    *remoteAETitleFlag,
 		CallingAETitle:   *aeTitleFlag,
 		SOPClasses:       sopClasses,
-		TransferSyntaxes: []string{"1.2.840.10008.1.2.4.91", "1.2.840.10008.1.2"},
+		TransferSyntaxes: []string{"1.2.840.10008.1.2.4.70", "1.2.840.10008.1.2"},
 	})
 	if err != nil {
 		log.Panic(err)
@@ -52,6 +52,7 @@ func cStore(inPath string) {
 	if err != nil {
 		log.Panicf("%s: %v", inPath, err)
 	}
+
 	err = su.CStore(dataset)
 	if err != nil {
 		log.Panicf("%s: cstore failed: %v", inPath, err)
@@ -111,14 +112,17 @@ func cFind() {
 }
 
 func main() {
-	flag.Parse()
-	if *storeFlag != "" {
-		cStore(*storeFlag)
-	} else if *findFlag {
-		cFind()
-	} else if *getFlag {
-		cGet()
-	} else {
-		log.Panic("Either -store, -get, or -find must be set")
-	}
+	//flag.Parse()
+	//if *storeFlag != "" {
+	//	cStore(*storeFlag)
+	//} else if *findFlag {
+	//	cFind()
+	//} else if *getFlag {
+	//	cGet()
+	//} else {
+	//	log.Panic("Either -store, -get, or -find must be set")
+	//}
+
+	path := "/Users/admin/Desktop/projects/binomix/go-netdicom/sampleclient/1.871.3.1542493919.43343.18906.3419317126.45597834.1.1.1"
+	cStore(path)
 }
