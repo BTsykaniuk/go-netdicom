@@ -527,7 +527,7 @@ func (sp *ServiceProvider) Run() {
 	for {
 		conn, err := sp.listener.Accept()
 		if err != nil {
-			dicomlog.Vprintf(0, "dicom.serviceProvider(%s): Accept error: %v", sp.label, err)
+			//dicomlog.Vprintf(0, "dicom.serviceProvider(%s): Accept error: %v", sp.label, err)
 			continue
 		}
 		dicomlog.Vprintf(0, "dicom.serviceProvider(%s): Accepted connection %p (remote: %+v)", sp.label, conn, conn.RemoteAddr())
