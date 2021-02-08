@@ -151,10 +151,10 @@ var QRFindClasses = []string{
 	standardUID("1.2.840.10008.5.1.4.31")}
 
 // QRMoveClasses is for issuing C-MOVE requests.
-var QRMoveClasses = []string{
+var QRMoveClasses = append([]string{
 	standardUID("1.2.840.10008.5.1.4.1.2.1.2"),
 	standardUID("1.2.840.10008.5.1.4.1.2.2.2"),
-	standardUID("1.2.840.10008.5.1.4.1.2.3.2")}
+	standardUID("1.2.840.10008.5.1.4.1.2.3.2")}, StorageClasses...)
 
 // QRGetClasses is for issuing C-GET requests.
 var QRGetClasses = append([]string{

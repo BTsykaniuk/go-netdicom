@@ -167,6 +167,11 @@ func (su *ServiceUser) Connect(serverAddr string, config *tls.Config) {
 	if config != nil {
 		conn, err := tls.Dial("tcp", serverAddr, config)
 
+		state := conn.ConnectionState()
+		for _, v := range state.PeerCertificates {
+			fmt.Println(v.Subject)
+		}
+
 		if err != nil {
 			dicomlog.Vprintf(0, "dicom.serviceUser: Connect(%s): %v", serverAddr, err)
 			su.disp.downcallCh <- stateEvent{event: evt17, pdu: nil, err: err}
@@ -487,6 +492,54 @@ func (su *ServiceUser) CGet(qrLevel QRLevel, filter []*dicom.Element,
 			if resp.Status.Status != 0 {
 				e := fmt.Errorf("Received C-GET error: %+v", resp)
 				dicomlog.Vprintf(0, "dicom.serviceUser: C-GET: %v", e)
+				return e
+			}
+			break
+		}
+	}
+	return nil
+}
+
+func (su *ServiceUser) CMove(qrLevel QRLevel, filter []*dicom.Element, destination string,
+	cb func(transferSyntaxUID, sopClassUID, sopInstanceUID string, data []byte) dimse.Status) error {
+	err := su.waitUntilReady()
+	if err != nil {
+		return err
+	}
+	context, payload, err := encodeQRPayload(qrOpCMove, qrLevel, filter, su.cm)
+	if err != nil {
+		return err
+	}
+	cs, err := su.disp.newCommand(su.cm, context)
+	if err != nil {
+		return err
+	}
+	defer su.disp.deleteCommand(cs)
+
+	cs.sendMessage(
+		&dimse.CMoveRq{
+			AffectedSOPClassUID: context.abstractSyntaxUID,
+			MessageID:           cs.messageID,
+			CommandDataSetType:  dimse.CommandDataSetTypeNonNull,
+			MoveDestination:     destination,
+		},
+		payload)
+	for {
+		event, ok := <-cs.upcallCh
+		if !ok {
+			su.status = serviceUserClosed
+			return fmt.Errorf("Connection closed while waiting for C-MOVE response")
+		}
+		doassert(event.eventType == upcallEventData)
+		doassert(event.command != nil)
+		resp, ok := event.command.(*dimse.CMoveRsp)
+		if !ok {
+			return fmt.Errorf("Found wrong response for C-MOVE: %v", event.command)
+		}
+		if resp.Status.Status != dimse.StatusPending {
+			if resp.Status.Status != 0 {
+				e := fmt.Errorf("Received C-MOVE error: %+v", resp)
+				dicomlog.Vprintf(0, "dicom.serviceUser: C-MOVE: %v", e)
 				return e
 			}
 			break

@@ -5,6 +5,7 @@ package netdicom
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net"
 
 	dicom "github.com/BTsykaniuk/go-dicom"
@@ -125,6 +126,7 @@ func handleCMove(
 			Status:                    dimse.Status{Status: dimse.StatusUnrecognizedOperation, ErrorComment: err.Error()},
 		}, nil)
 	}
+	log.Println(params.CMove)
 	if params.CMove == nil {
 		cs.sendMessage(&dimse.CMoveRsp{
 			AffectedSOPClassUID:       c.AffectedSOPClassUID,
@@ -135,6 +137,7 @@ func handleCMove(
 		return
 	}
 	remoteHostPort, ok := params.RemoteAEs[c.MoveDestination]
+	log.Println(c.MoveDestination)
 	if !ok {
 		sendError(fmt.Errorf("C-MOVE destination '%v' not registered in the server", c.MoveDestination))
 		return
@@ -443,16 +446,17 @@ func elementsString(elems []*dicom.Element) string {
 // Send "ds" to remoteHostPort using C-STORE. Called as part of C-MOVE.
 func runCStoreOnNewAssociation(myAETitle, remoteAETitle, remoteHostPort string, ds *dicom.DataSet) error {
 	su, err := NewServiceUser(ServiceUserParams{
-		CalledAETitle:  remoteAETitle,
-		CallingAETitle: myAETitle,
-		SOPClasses:     sopclass.StorageClasses})
+		CalledAETitle:    remoteAETitle,
+		CallingAETitle:   myAETitle,
+		SOPClasses:       sopclass.StorageClasses,
+		TransferSyntaxes: []string{"1.2.840.10008.1.2.4.50", "1.2.840.10008.1.2.4.51"},
+	})
 	if err != nil {
 		return err
 	}
 	defer su.Release()
-	config := tls.Config{}
 
-	su.Connect(remoteHostPort, &config)
+	su.Connect(remoteHostPort, nil)
 	err = su.CStore(ds)
 	dicomlog.Vprintf(1, "dicom.serviceProvider: C-STORE subop done: %v", err)
 	return err

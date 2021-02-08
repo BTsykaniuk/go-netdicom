@@ -29,8 +29,8 @@ import (
 )
 
 var (
-	portFlag     = flag.String("port", "10000", "TCP port to listen to")
-	aeFlag       = flag.String("ae", "bogusae", "AE title of this server")
+	portFlag     = flag.String("port", "11112", "TCP port to listen to")
+	aeFlag       = flag.String("ae", "GBMAC0261", "AE title of this server")
 	remoteAEFlag = flag.String("remote-ae", "GBMAC0261:localhost:11112", `
 Comma-separated list of remote AEs, in form aetitle:host:port, For example -remote-ae testae:foo.example.com:12345,testae2:bar.example.com:23456.
 In this example, a C-GET or C-MOVE request to application entity "testae" will resolve to foo.example.com:12345.`)
@@ -38,7 +38,7 @@ In this example, a C-GET or C-MOVE request to application entity "testae" will r
 The directory to locate DICOM files to report in C-FIND, C-MOVE, etc.
 Files are searched recursivsely under this directory.
 Defaults to '.'.`)
-	outputFlag = flag.String("output", "", `
+	outputFlag = flag.String("output", "move", `
 The directory to store files received by C-STORE.
 If empty, use <dir>/incoming, where <dir> is the value of the -dir flag.`)
 
