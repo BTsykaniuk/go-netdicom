@@ -29,7 +29,7 @@ import (
 )
 
 var (
-	portFlag     = flag.String("port", "11112", "TCP port to listen to")
+	portFlag     = flag.String("port", "10000", "TCP port to listen to")
 	aeFlag       = flag.String("ae", "GBMAC0261", "AE title of this server")
 	remoteAEFlag = flag.String("remote-ae", "GBMAC0261:localhost:11112", `
 Comma-separated list of remote AEs, in form aetitle:host:port, For example -remote-ae testae:foo.example.com:12345,testae2:bar.example.com:23456.

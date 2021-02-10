@@ -80,16 +80,31 @@ func generateCFindElements(id string) (netdicom.QRLevel, []*dicom.Element) {
 	//	dicom.MustNewElement(dicomtag.StudyID, "1.2.276.0.7230010.3.1.2.1787205428.166.1117461927"),
 	//	dicom.MustNewElement(dicomtag.RequestedProcedureDescription, "*"),
 	//}
-	//return netdicom.QRLevelPatient, args
+
 }
 
 func cGet() {
 	su := newServiceUser(sopclass.QRMoveClasses)
 	defer su.Release()
-	qrLevel, args := generateCFindElements("1.2.40.0.13.1.316397237693838535848679192193205474710")
+
+	path := "/Users/admin/Desktop/projects/binomix/go-netdicom/testdata/reportsi.dcm"
+	dataset, err := dicom.ReadDataSetFromFile(path, dicom.ReadOptions{})
+	if err != nil {
+		log.Println(err)
+	}
+	finding, err := dicom.FindElementByName(dataset.Elements, "StudyInstanceUID")
+	if err != nil {
+		log.Println(err)
+	}
+
+	id := finding.Value[0].(string)
+
+	qrLevel, args := generateCFindElements(id)
 	n := 0
-	err := su.CMove(qrLevel, args, "AEBINOMIX@176.99.133.176:21113",
+
+	err = su.CMove(qrLevel, args, "GBMAC0261",
 		func(transferSyntaxUID, sopClassUID, sopInstanceUID string, data []byte) dimse.Status {
+			log.Println("Here")
 			log.Printf("%d: C-GET data; transfersyntax=%v, sopclass=%v, sopinstance=%v data %dB",
 				n, transferSyntaxUID, sopClassUID, sopInstanceUID, len(data))
 			n++
