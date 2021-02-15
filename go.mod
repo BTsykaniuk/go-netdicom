@@ -1,7 +1,7 @@
 module github.com/BTsykaniuk/go-netdicom
 
 require (
-	github.com/BTsykaniuk/go-dicom v0.0.0-20210121185104-15894ac849f0
+	github.com/BTsykaniuk/go-dicom v0.0.0-20210215195313-a5b660143317
 	github.com/stretchr/testify v1.2.2
 )
 

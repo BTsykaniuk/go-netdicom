@@ -2,10 +2,12 @@
 package main
 
 import (
-	"crypto/tls"
 	"flag"
+	"fmt"
 	"github.com/BTsykaniuk/go-netdicom/dimse"
 	"log"
+	"os"
+	"path/filepath"
 
 	"github.com/BTsykaniuk/go-dicom"
 	"github.com/BTsykaniuk/go-dicom/dicomtag"
@@ -14,10 +16,10 @@ import (
 )
 
 var (
-	serverFlag        = flag.String("server", "178.208.149.80:21113", "host:port of the remote application entity")
+	serverFlag        = flag.String("server", "176.99.133.226:9996", "host:port of the remote application entity")
 	storeFlag         = flag.String("store", "", "If set, issue C-STORE to copy this file to the remote server")
 	aeTitleFlag       = flag.String("ae-title", "BINOMIX", "AE title of the client")
-	remoteAETitleFlag = flag.String("remote-ae-title", "SSLAIBUSSCP", "AE title of the server")
+	remoteAETitleFlag = flag.String("remote-ae-title", "AEZEBRA", "AE title of the server")
 	findFlag          = flag.Bool("find", false, "Issue a C-FIND.")
 	getFlag           = flag.Bool("get", false, "Issue a C-GET.")
 	seriesFlag        = flag.String("series", "", "Study series UID to retrieve in C-{FIND,GET}.")
@@ -29,20 +31,21 @@ func newServiceUser(sopClasses []string) *netdicom.ServiceUser {
 		CalledAETitle:    *remoteAETitleFlag,
 		CallingAETitle:   *aeTitleFlag,
 		SOPClasses:       sopClasses,
-		TransferSyntaxes: []string{"1.2.840.10008.1.2.4.50", "1.2.840.10008.1.2.4.51"},
+		TransferSyntaxes: []string{"1.2.840.10008.1.2.4.70", "1.2.840.10008.1.2.4.51"},
 	})
 	if err != nil {
 		log.Panic(err)
 	}
 
-	cert, err := tls.LoadX509KeyPair("client_keystore.crt", "client_keystore.key")
-	if err != nil {
-		log.Fatalf("server: loadkeys: %s", err)
-	}
-	config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	//cert, err := tls.LoadX509KeyPair("client_keystore.crt", "client_keystore.key")
+	//if err != nil {
+	//	log.Fatalf("server: loadkeys: %s", err)
+	//}
+	//config := tls.Config{Certificates: []tls.Certificate{cert}, InsecureSkipVerify: true}
+	//
+	//log.Printf("Connecting to %s", *serverFlag)
 
-	log.Printf("Connecting to %s", *serverFlag)
-	su.Connect(*serverFlag, &config)
+	su.Connect(*serverFlag, nil)
 	return su
 }
 
@@ -50,15 +53,48 @@ func cStore(inPath string) {
 	su := newServiceUser(sopclass.StorageClasses)
 	defer su.Release()
 	dataset, err := dicom.ReadDataSetFromFile(inPath, dicom.ReadOptions{})
-	if err != nil {
-		log.Panicf("%s: %v", inPath, err)
-	}
+	find, _ := dataset.FindElementByName("RequestedProcedurePriority")
+	find.VR = "SH"
+
+	dicom.WriteDataSetToFile("test_store.dcm", dataset)
 
 	err = su.CStore(dataset)
 	if err != nil {
 		log.Println(err)
 		log.Panicf("%s: cstore failed: %v", inPath, err)
 	}
+	log.Printf("C-STORE finished successfully")
+}
+
+func cStoreBulk(inPath string) {
+	su := newServiceUser(sopclass.StorageClasses)
+	defer su.Release()
+
+	err := filepath.Walk(inPath,
+		func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				return err
+			}
+			log.Println(path)
+			dataset, err := dicom.ReadDataSetFromFile(path, dicom.ReadOptions{})
+			if err != nil {
+				log.Println("%s: %v", path, err)
+			} else {
+				find, _ := dataset.FindElementByName("PixelData")
+				log.Println(find.Value)
+				fmt.Println(path, info.Size())
+				err = su.CStore(dataset)
+				if err != nil {
+					log.Println(err)
+					log.Panicf("%s: cstore failed: %v", inPath, err)
+				}
+			}
+			return nil
+		})
+	if err != nil {
+		log.Println(err)
+	}
+
 	log.Printf("C-STORE finished successfully")
 }
 
@@ -158,7 +194,8 @@ func main() {
 	//	log.Panic("Either -store, -get, or -find must be set")
 	//}
 
-	cFind()
+	//cFind()
 	//cGet()
-	//cStore(path)
+	cStore("/Users/admin/Desktop/projects/binomix/go-netdicom/sampleclient/1.2.276.0.7230010.3.1.4.1025138851.1352.1580391141.251")
+	//cStoreBulk("/Users/admin/Desktop/dcm/XR")
 }
