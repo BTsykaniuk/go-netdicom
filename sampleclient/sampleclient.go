@@ -53,8 +53,6 @@ func cStore(inPath string) {
 	su := newServiceUser(sopclass.StorageClasses)
 	defer su.Release()
 	dataset, err := dicom.ReadDataSetFromFile(inPath, dicom.ReadOptions{})
-	find, _ := dataset.FindElementByName("RequestedProcedurePriority")
-	find.VR = "SH"
 
 	dicom.WriteDataSetToFile("test_store.dcm", dataset)
 
